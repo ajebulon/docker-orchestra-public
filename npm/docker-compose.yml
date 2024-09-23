@@ -1,0 +1,61 @@
+name: npm
+
+secrets:
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+  DB_ROOT_PWD:
+    file: .secrets/db_root_pwd
+
+services:
+  web:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - ${VPN_IP}:81:81
+      - ${LOCAL_IP}:81:81
+    networks:
+      - default
+      - router
+    hostname: npm
+    environment:
+      - DB_MYSQL_HOST=db
+      - DB_MYSQL_PORT=3306
+      - DB_MYSQL_USER=${DB_USER}
+      - DB_MYSQL_PASSWORD__FILE=/run/secrets/DB_USER_PWD
+      - DB_MYSQL_NAME=${DB_NAME}
+    volumes:
+      - web-data:/data
+      - web-letsencrypt:/etc/letsencrypt
+      - ${STATIC_PATH}:/srv/www # [Optional] If you run your own web server on the host and want to serve the static files
+    secrets:
+      - DB_USER_PWD
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:lts
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/DB_ROOT_PWD
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+      - MARIADB_DATABASE=${DB_NAME}
+    volumes:
+      - db-data:/var/lib/mysql
+    secrets:
+      - DB_ROOT_PWD
+      - DB_USER_PWD
+
+volumes:
+  web-data:
+  web-letsencrypt:
+  db-data:
+
+networks:
+  default:
+  router:
+    external: True

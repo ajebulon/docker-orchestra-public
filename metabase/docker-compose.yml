@@ -1,0 +1,60 @@
+name: metabase
+
+secrets:
+  DB_USER_NAME:
+    file: .secrets/db_user_name
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+
+services:
+  web:
+    image: metabase/metabase:latest
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:3001:3000
+    networks:
+      - default
+      - router
+    hostname: metabase
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=${DB_NAME}
+      - MB_DB_PORT=5432
+      - MB_DB_USER_FILE=/run/secrets/DB_USER_NAME
+      - MB_DB_PASS_FILE=/run/secrets/DB_USER_PWD
+      - MB_DB_HOST=db
+    volumes:
+      - /dev/urandom:/dev/random:ro
+    secrets:
+      - DB_USER_NAME
+      - DB_USER_PWD
+    depends_on:
+      - db
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER_FILE=/run/secrets/DB_USER_NAME
+      - POSTGRES_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    secrets:
+      - DB_USER_NAME
+      - DB_USER_PWD
+
+volumes:
+  db-data:
+
+networks:
+  default:
+  router:
+    external: True

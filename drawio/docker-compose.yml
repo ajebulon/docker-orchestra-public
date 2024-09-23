@@ -1,0 +1,13 @@
+name: drawio
+
+services:
+  web:
+    image: jgraph/drawio:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: drawio
+
+networks:
+  router:
+    external: True

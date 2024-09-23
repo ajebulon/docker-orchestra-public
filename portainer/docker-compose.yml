@@ -1,0 +1,22 @@
+name: portainer
+
+services:
+  web:
+    image: portainer/portainer-ce:sts
+    restart: always
+    ports:
+      - ${VPN_IP}:9443:9443
+      - ${LOCAL_IP}:9443:9443
+    networks:
+      - router
+    hostname: portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - web-data:/data
+
+volumes:
+  web-data:
+
+networks:
+  router:
+    external: True

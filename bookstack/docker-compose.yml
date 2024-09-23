@@ -1,0 +1,56 @@
+name: bookstack
+
+secrets:
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+  DB_ROOT_PWD:
+    file: .secrets/db_root_pwd
+
+
+services:
+  web:
+    image: lscr.io/linuxserver/bookstack:latest
+    restart: unless-stopped
+    networks:
+      - default
+      - router
+    hostname: bookstack
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER}
+      - TZ=${TIME_ZONE}
+      - FILE__DB_PASS=/run/secrets/DB_USER_PWD
+      - DB_DATABASE=${DB_NAME}
+      - APP_URL=${APP_URL}
+    volumes:
+      - web-data:/config
+    secrets:
+      - DB_USER_PWD
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:lts
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/DB_ROOT_PWD
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+      - MARIADB_DATABASE=${DB_NAME}
+    volumes:
+      - db-data:/var/lib/mysql
+    secrets:
+      - DB_ROOT_PWD
+      - DB_USER_PWD
+
+volumes:
+  web-data:
+  db-data:
+
+networks:
+  default:
+  router:
+    external: True

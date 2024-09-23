@@ -1,0 +1,13 @@
+name: excalidraw
+
+services:
+  web:
+    image: excalidraw/excalidraw:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: excalidraw
+
+networks:
+  router:
+    external: True

@@ -1,0 +1,25 @@
+name: linkstack
+
+services:
+  web:
+    image: linkstackorg/linkstack
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: linkstack
+    environment:
+      - HTTP_SERVER_NAME=${SERVER_URL}
+      - HTTPS_SERVER_NAME=${SERVER_URL}
+      - SERVER_ADMIN=${SERVER_ADMIN}
+      - TZ=${TZ}
+      - PHP_MEMORY_LIMIT=512M
+      - UPLOAD_MAX_FILESIZE=16M
+    volumes:
+      - web-data:/htdocs
+
+volumes:
+  web-data:
+
+networks:
+  router:
+    external: True

@@ -1,0 +1,52 @@
+name: wordpress
+
+secrets:
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+  DB_ROOT_PWD:
+    file: .secrets/db_root_pwd
+
+services:
+  web:
+    image: wordpress:latest
+    restart: unless-stopped
+    networks:
+      - default
+      - router
+    hostname: wordpress
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=${DB_USER}
+      - WORDPRESS_DB_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+      - WORDPRESS_DB_NAME=${DB_NAME}
+    volumes:
+      - web-data:/var/www/html
+    secrets:
+      - DB_USER_PWD
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:lts
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/DB_ROOT_PWD
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+      - MARIADB_DATABASE=${DB_NAME}
+    volumes:
+      - db-data:/var/lib/mysql
+    secrets:
+      - DB_ROOT_PWD
+      - DB_USER_PWD
+
+volumes:
+  web-data:
+  db-data:
+
+networks:
+  default:
+  router:
+    external: True

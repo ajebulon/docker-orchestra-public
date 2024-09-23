@@ -1,0 +1,78 @@
+name: owncloud
+
+secrets:
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+  DB_ROOT_PWD:
+    file: .secrets/db_root_pwd
+
+services:
+  web:
+    image: owncloud/server:latest
+    restart: unless-stopped
+    networks:
+      - default
+      - router
+    hostname: owncloud
+    environment:
+      - OWNCLOUD_DOMAIN=${OWNCLOUD_DOMAIN}
+      - OWNCLOUD_TRUSTED_DOMAINS=${OWNCLOUD_DOMAIN}
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=${DB_NAME}
+      - OWNCLOUD_DB_USERNAME=${DB_USER}
+      - OWNCLOUD_DB_PASSWORD=${DB_USER_PWD}
+      - OWNCLOUD_DB_HOST=db
+      - OWNCLOUD_MYSQL_UTF8MB4=true
+      - OWNCLOUD_REDIS_ENABLED=true
+      - OWNCLOUD_REDIS_HOST=cache
+    volumes:
+      - web-data:/mnt/data
+    depends_on:
+      - db
+      - cache
+    healthcheck:
+      test: ["CMD", "/usr/bin/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    image: mariadb:lts
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/DB_ROOT_PWD
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+      - MARIADB_DATABASE=${DB_NAME}
+    volumes:
+      - db-data:/var/lib/mysql
+    secrets:
+      - DB_ROOT_PWD
+      - DB_USER_PWD
+    command: ["--max-allowed-packet=128M", "--innodb-log-file-size=64M"]
+
+  cache:
+    image: redis:latest
+    restart: unless-stopped
+    networks:
+      - default
+    volumes:
+      - cache-data:/data
+    command: ["--databases", "1"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  web-data:
+  db-data:
+  cache-data:
+
+networks:
+  default:
+  router:
+    external: True

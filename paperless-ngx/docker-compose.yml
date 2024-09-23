@@ -1,0 +1,78 @@
+name: paperlessngx
+
+secrets:
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+
+services:
+  web:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    networks:
+      - default
+      - router
+    hostname: paperlessngx
+    environment:
+      - PAPERLESS_REDIS=redis://cache:6379
+      - PAPERLESS_DBHOST=db
+      - PAPERLESS_DBNAME=${DB_NAME}
+      - PAPERLESS_DBUSER=${DB_USER}
+      - PAPERLESS_DBPASS_FILE=/run/secrets/DB_USER_PWD
+      - PAPERLESS_OCR_LANGUAGE=${PAPERLESS_OCR_LANGUAGE}
+      - PAPERLESS_OCR_LANGUAGES=${PAPERLESS_OCR_LANGUAGES}
+      - PAPERLESS_URL=${PAPERLESS_URL}
+      - PAPERLESS_SECRET_KEY=${PAPERLESS_SECRET_KEY}
+      - PAPERLESS_TIME_ZONE=${PAPERLESS_TIME_ZONE}
+      - PAPERLESS_PATH_BASE=${PAPERLESS_PATH_BASE}
+      - PAPERLESS_ADMIN_USER=${PAPERLESS_ADMIN_USER}
+      - PAPERLESS_ADMIN_PASSWORD=${PAPERLESS_ADMIN_PASSWORD}
+      - PAPERLESS_USE_X_FORWARD_HOST=${PAPERLESS_USE_X_FORWARD_HOST}
+      - PAPERLESS_USE_X_FORWARD_PORT=${PAPERLESS_USE_X_FORWARD_PORT}
+      - PAPERLESS_PROXY_SSL_HEADER=${PAPERLESS_PROXY_SSL_HEADER}
+    volumes:
+      - ${PAPERLESS_PATH_BASE}/data:/usr/src/paperless/data
+      - ${PAPERLESS_PATH_BASE}/media:/usr/src/paperless/media
+      - ${PAPERLESS_PATH_BASE}/export:/usr/src/paperless/export
+      - ${PAPERLESS_PATH_BASE}/consume:/usr/src/paperless/consume
+    secrets:
+      - DB_USER_PWD
+    depends_on:
+      - db
+      - cache
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    secrets:
+      - DB_USER_PWD
+
+  cache:
+    image: redis:latest
+    restart: unless-stopped
+    networks:
+      - default
+    volumes:
+      - cache-data:/data
+    command: ["--databases", "1"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
+  cache-data:
+
+networks:
+  default:
+  router:
+    external: True

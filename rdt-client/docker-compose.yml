@@ -1,0 +1,25 @@
+name: rdtclient
+
+services:
+  web:
+    image: rogerfar/rdtclient:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: rdtclient
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - web-data:/data/db
+      - ${DOWNLOAD_PATH}:/data/downloads
+    logging:
+       driver: json-file
+       options:
+          max-size: 10m
+
+volumes:
+  web-data:
+
+networks:
+  router:
+    external: True

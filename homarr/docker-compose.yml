@@ -1,0 +1,23 @@
+name: homarr
+
+services:
+  web:
+    image: ghcr.io/ajnart/homarr:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: homarr
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - web-configs:/app/data/configs
+      - web-icons:/app/public/icons
+      - web-data:/data
+
+volumes:
+  web-configs:
+  web-icons:
+  web-data:
+
+networks:
+  router:
+    external: True

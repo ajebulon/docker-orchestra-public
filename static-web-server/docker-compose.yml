@@ -1,0 +1,17 @@
+name: staticwebserver
+
+services:
+  web:
+    image: joseluisq/static-web-server:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: staticwebserver
+    environment:
+      - SERVER_ROOT=/var/www/html
+    volumes:
+      - ${ROOT_PATH_IN_HOST}:/var/www/html
+
+networks:
+  router:
+    external: True

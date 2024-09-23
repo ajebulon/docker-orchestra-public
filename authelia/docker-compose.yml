@@ -1,0 +1,55 @@
+name: authelia
+
+secrets:
+  DB_USER_PWD:
+    file: .secrets/db_user_pwd
+
+services:
+  web:
+    image: authelia/authelia:latest
+    restart: unless-stopped
+    networks:
+      - default
+      - router
+    hostname: authelia
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG_DIR}:/config
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/DB_USER_PWD
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    secrets:
+      - DB_USER_PWD
+
+  cache:
+    image: redis:latest
+    restart: unless-stopped
+    networks:
+      - default
+    volumes:
+      - cache-data:/data
+    command: ["--databases", "1"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
+  cache-data:
+
+networks:
+  default:
+  router:
+    external: True

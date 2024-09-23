@@ -1,0 +1,27 @@
+name: stirlingpdf
+
+services:
+  web:
+    image: frooodle/s-pdf:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: stirlingpdf
+    environment:
+      - DOCKER_ENABLE_SECURITY=${DOCKER_ENABLE_SECURITY}
+      - SECURITY_ENABLE_LOGIN=${SECURITY_ENABLE_LOGIN}
+      - SECURITY_INITIALLOGIN_USERNAME=${LOGIN_USERNAME}
+      - SECURITY_INITIALLOGIN_PASSWORD=${LOGIN_PASSWORD}
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=en_US
+    volumes:
+      - training-data:/usr/share/tessdata #Required for extra OCR languages
+      - config-data:/configs
+
+volumes:
+  training-data:
+  config-data:
+
+networks:
+  router:
+    external: True

@@ -1,0 +1,27 @@
+name: watchtower
+
+services:
+  app:
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    networks:
+      - router
+    hostname: watchtower
+    environment:
+      - WATCHTOWER_NOTIFICATIONS=${NOTIFICATIONS}
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${NOTIFICATION_EMAIL_FROM}
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${NOTIFICATION_EMAIL_TO}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=${NOTIFICATION_EMAIL_SERVER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT=${NOTIFICATION_EMAIL_SERVER_PORT}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${NOTIFICATION_EMAIL_SERVER_USER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${NOTIFICATION_EMAIL_SERVER_PASSWORD}
+      - WATCHTOWER_CLEANUP=${CLEANUP}
+      - WATCHTOWER_NOTIFICATION_EMAIL_DELAY=30
+      - TZ=${TZ}
+      - WATCHTOWER_MONITOR_ONLY=${MONITOR_ONLY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  router:
+    external: True
